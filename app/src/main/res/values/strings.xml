@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">sudoku-app</string>
+    <string name="start_game_btn">Start Game</string>
+    <string name="homepage_heading">Welcome to Sudoku 🧩</string>
 </resources>
