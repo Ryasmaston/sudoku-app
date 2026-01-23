@@ -1,11 +1,15 @@
 package com.example.sudoku_app.viewmodel
 
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.example.sudoku_app.models.SudokuBoard
 import com.example.sudoku_app.models.SudokuGenerator
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
 
 data class GameUIState(
     val selectedIndex: Int? = null,
@@ -15,7 +19,9 @@ data class GameUIState(
     val board: SudokuBoard = SudokuBoard(),
     val difficulty: Int = 30,
     val difficultyLabel: String = "Easy",
-    val clueCount: Int = 33
+    val clueCount: Int = 33,
+    val elapsedTime: Int = 0,
+    val isComplete: Boolean = false
     )
 
 class SudokuViewModel : ViewModel() {
@@ -23,6 +29,8 @@ class SudokuViewModel : ViewModel() {
 
     private val _uiState = MutableStateFlow(GameUIState())
     val uiState: StateFlow<GameUIState> = _uiState.asStateFlow()
+
+    var timerJob: Job? = null
 
     fun setDifficulty(newDifficulty: Int) {
         val clampedDifficulty = newDifficulty.coerceIn(0, 100)
@@ -34,6 +42,7 @@ class SudokuViewModel : ViewModel() {
     } // updates difficulty level and recalculates the difficulty label and clue count
 
     fun startNewGame() {
+        stopTimer()
         val fullBoard = SudokuBoard()
         SudokuGenerator.fillBoard(fullBoard)
         val (puzzle, actualDifficulty) = SudokuGenerator.makePuzzle(
@@ -46,8 +55,11 @@ class SudokuViewModel : ViewModel() {
             selectedIndex = null,
             columnIndexList = emptyList(),
             rowIndexList = emptyList(),
-            squareIndexList = emptyList()
+            squareIndexList = emptyList(),
+            elapsedTime = 0,
+            isComplete = false
         )
+        startTimer()
     } // generate new board with current difficulty setting
 
     fun startNewGameWithDifficulty(difficulty: Int) {
@@ -58,15 +70,22 @@ class SudokuViewModel : ViewModel() {
     fun enterNumber(index: Int, number: Int) {
         val row = index / 9
         val col = index % 9
-        val cell = uiState.value.board.cells[row][col]
+        val currentBoard = _uiState.value.board
+        val cell = currentBoard.cells[row][col]
         if(!cell.isFixed) {
             cell.value = number
             val solution = _uiState.value.board.solution
             if(solution != null) {
                 cell.isCorrect = (number == solution[row][col])
             }
+            val newBoard = currentBoard.copy()
+            val isComplete = checkIfComplete(newBoard)
+            if(isComplete){
+                stopTimer()
+            }
             _uiState.value = _uiState.value.copy(
-                board = _uiState.value.board
+                board = newBoard,
+                isComplete = isComplete
             )
         }
     } // enter a number (1-9) in a cell at the specified index if cell is empty
@@ -81,11 +100,58 @@ class SudokuViewModel : ViewModel() {
                 cell.value = null
                 cell.isCorrect = null
                 _uiState.value = _uiState.value.copy(
-                    board = _uiState.value.board
+                    board = _uiState.value.board,
+                    isComplete = false
                 )
             }
         }
     } // clear value from currently selected cell
+
+    fun checkIfComplete(board: SudokuBoard): Boolean {
+        val allFilled = board.cells.all { row ->
+            row.all { it.value != null }
+        }
+        if(!allFilled) return false
+        val solution = board.solution ?: return false
+
+        for (row in 0 until 9) {
+            for (col in 0 until 9) {
+                val cellValue = board.cells[row][col].value
+                if (cellValue != solution[row][col]) {
+                    return false
+                }
+            }
+        }
+
+        return true
+    }
+
+    private fun startTimer() {
+        timerJob = viewModelScope.launch {
+            while (true) {
+                delay(1000)
+                _uiState.value = _uiState.value.copy(
+                    elapsedTime = _uiState.value.elapsedTime + 1
+                )
+            }
+        }
+    }
+
+    private fun stopTimer() {
+        timerJob?.cancel()
+        timerJob = null
+    }
+
+    fun formatTime(seconds: Int): String {
+        val minutes = seconds / 60
+        val remainingSeconds = seconds % 60
+        return "%02d:%02d".format(minutes, remainingSeconds)
+    }
+
+    override fun onCleared() {
+        super.onCleared()
+        stopTimer()
+    }
 
     fun generateColumn(index: Int) {
         val remainder = index % 9

@@ -38,6 +38,7 @@ class SudokuBoard(val size: Int = 9) {
             for (c in 0 until size) {
                 newBoard.cells[r][c].value = this.cells[r][c].value
                 newBoard.cells[r][c].isFixed = this.cells[r][c].isFixed
+                newBoard.cells[r][c].isCorrect = this.cells[r][c].isCorrect
             }
         }
         newBoard.solution = this.solution
