@@ -24,11 +24,13 @@ import com.example.sudoku_app.components.NumberPad
 import com.example.sudoku_app.viewmodel.SudokuViewModel
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
-import androidx.compose.material3.TextButton
+import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
 
 
 @Composable
 fun GameScreen(
+    navController: NavController,
     modifier: Modifier = Modifier,
     sudokuViewModel: SudokuViewModel = viewModel()
 ) {
@@ -47,8 +49,8 @@ fun GameScreen(
                 )
             },
             confirmButton = {
-                Button(onClick = { sudokuViewModel.startNewGame() }) {
-                    Text("New Game")
+                Button(onClick = {navController.popBackStack()}) {
+                    Text("Back to homepage")
                 }
             }
         )
@@ -107,5 +109,5 @@ fun GameScreen(
 @Preview(showBackground = true)
 @Composable
 fun PreviewGameScreen() {
-    GameScreen()
+    GameScreen(navController = rememberNavController())
 }
