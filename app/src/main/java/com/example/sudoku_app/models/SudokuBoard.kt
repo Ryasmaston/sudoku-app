@@ -13,6 +13,8 @@ class SudokuBoard(val size: Int = 9) {
     val cells: List<List<SudokuCell>> = List(size) { row ->
         List(size) { col -> SudokuCell(row, col) }
     }
+
+    var solution: List<List<Int>>? = null
     fun isMoveValid(row: Int, col: Int, number: Int): Boolean {
         if (cells[row].any { it.value == number }) return false
         if (cells.any { it[col].value == number }) return false
@@ -36,8 +38,10 @@ class SudokuBoard(val size: Int = 9) {
             for (c in 0 until size) {
                 newBoard.cells[r][c].value = this.cells[r][c].value
                 newBoard.cells[r][c].isFixed = this.cells[r][c].isFixed
+                newBoard.cells[r][c].isCorrect = this.cells[r][c].isCorrect
             }
         }
+        newBoard.solution = this.solution
         return newBoard
     }
 }
