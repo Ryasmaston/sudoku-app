@@ -4,9 +4,12 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowColumn
 import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -27,20 +30,23 @@ fun NumberPad(
 ) {
     val state by sudokuViewModel.uiState.collectAsState()
     val selectedIndex = state.selectedIndex
+
     FlowColumn(
         modifier = modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp),
+            .fillMaxWidth(0.5f)
+            .padding(start = 16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
+
         listOf(
             listOf(1, 2, 3),
             listOf(4, 5, 6),
             listOf(7, 8, 9)
         ).forEach { rowNumbers ->
-            FlowRow(
+
+            Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.Center
+                horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 rowNumbers.forEach { number ->
                     IconButton(
@@ -52,15 +58,12 @@ fun NumberPad(
                         enabled = selectedIndex != null,
                         modifier = Modifier.size(64.dp)
                     ) {
-                        Text(
-                            text = number.toString(),
-                            fontSize = 22.sp
-                        )
+                        Text(number.toString(), fontSize = 22.sp)
                     }
                 }
             }
         }
-        FlowRow(
+        Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.Center
         ) {
@@ -73,10 +76,7 @@ fun NumberPad(
                 enabled = selectedIndex != null,
                 modifier = Modifier.size(64.dp)
             ) {
-                Text(
-                    text = "0",
-                    fontSize = 22.sp
-                )
+                Text("0", fontSize = 22.sp)
             }
         }
     }
