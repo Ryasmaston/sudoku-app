@@ -85,7 +85,7 @@ class SudokuViewModel : ViewModel() {
             board = newBoard,
             isComplete = true
         )
-    }
+    } // only for debugging, comment out eventually
 
 
     fun enterNumber(index: Int, number: Int) {

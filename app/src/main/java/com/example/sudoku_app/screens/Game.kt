@@ -89,7 +89,7 @@ fun GameScreen(
                     modifier = Modifier.padding(top = 8.dp)
                 ) {
                     Text("Auto Complete (debugging)")
-                }
+                } // button is only for debugging purposes
             }
         }
         Row(
