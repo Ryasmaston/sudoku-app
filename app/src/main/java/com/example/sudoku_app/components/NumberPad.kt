@@ -27,38 +27,63 @@ fun NumberPad(
 ) {
     val state by sudokuViewModel.uiState.collectAsState()
     val selectedIndex = state.selectedIndex
-    FlowColumn(modifier = modifier.padding(8.dp)) {
-        FlowRow(
-            modifier = modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.End,
-        ) {
-            OptionBar()
-        }
-
-        FlowRow(
-            modifier = modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.Center,
-        ) {
-            (1..9).forEach { number ->
-                IconButton(
-                    onClick = {
-                        if (selectedIndex != null) {
-                            sudokuViewModel.enterNumber(selectedIndex, number)
-                        }
-                    },
-                    modifier = modifier.size(40.dp)
-                ) {
-                    Text("$number", fontSize = 40.sp)
+    FlowColumn(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        listOf(
+            listOf(1, 2, 3),
+            listOf(4, 5, 6),
+            listOf(7, 8, 9)
+        ).forEach { rowNumbers ->
+            FlowRow(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.Center
+            ) {
+                rowNumbers.forEach { number ->
+                    IconButton(
+                        onClick = {
+                            selectedIndex?.let {
+                                sudokuViewModel.enterNumber(it, number)
+                            }
+                        },
+                        enabled = selectedIndex != null,
+                        modifier = Modifier.size(64.dp)
+                    ) {
+                        Text(
+                            text = number.toString(),
+                            fontSize = 22.sp
+                        )
+                    }
                 }
+            }
+        }
+        FlowRow(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.Center
+        ) {
+            IconButton(
+                onClick = {
+                    selectedIndex?.let {
+                        sudokuViewModel.enterNumber(it, 0)
+                    }
+                },
+                enabled = selectedIndex != null,
+                modifier = Modifier.size(64.dp)
+            ) {
+                Text(
+                    text = "0",
+                    fontSize = 22.sp
+                )
             }
         }
     }
 }
-
 
 @Preview(showBackground = true)
 @Composable
 fun NumberPadPreview() {
     NumberPad()
 }
-
