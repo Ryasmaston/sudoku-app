@@ -5,5 +5,6 @@ data class SudokuCell(
     val col: Int,
     var value: Int? = null,
     var isFixed: Boolean = false,
-    var isCorrect: Boolean? = null
+    var isCorrect: Boolean? = null,
+    var notes: MutableSet<Int> = mutableSetOf()
 )
