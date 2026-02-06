@@ -100,7 +100,10 @@ fun Grid(modifier: Modifier = Modifier, sudokuViewModel: SudokuViewModel = viewM
                                 ) {
                                     Text(
                                         text = cell.notes.sorted().joinToString(" "),
-                                        color = Color(0xFF616161),
+                                        color = when {
+                                            isSelectedCell -> Color.White
+                                            else -> Color(0xFF303030)
+                                        },
                                         fontSize = 10.sp,
                                         fontWeight = FontWeight.Normal
                                     )
