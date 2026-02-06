@@ -26,7 +26,10 @@ data class GameUIState(
     val elapsedTime: Int = 0,
     val isComplete: Boolean = false,
     val notesMode: Boolean = false,
-    val hasActiveGame: Boolean = false
+    val hasActiveGame: Boolean = false,
+    var lives: Int = 3,
+    val flashingIndex: Int?= null,
+    val isGameOver: Boolean = false
     )
 
 class SudokuViewModel(val gameStateManager: GameStateManager) : ViewModel() {
@@ -76,7 +79,8 @@ class SudokuViewModel(val gameStateManager: GameStateManager) : ViewModel() {
             rowIndexList = emptyList(),
             squareIndexList = emptyList(),
             elapsedTime = 0,
-            isComplete = false
+            isComplete = false,
+            lives = 3
         )
         startTimer()
     } // generate new board with current difficulty setting
@@ -171,6 +175,11 @@ class SudokuViewModel(val gameStateManager: GameStateManager) : ViewModel() {
                 if (solution != null) {
                     cell.isCorrect = (number == solution[row][col])
                 }
+                if (cell.isCorrect == false) {
+                    _uiState.value = _uiState.value.copy(lives = _uiState.value.lives - 1)
+                    triggerFlash(index)
+                    return
+                }
             }
             val newBoard = currentBoard.copy()
             val isComplete = checkIfComplete(newBoard)
@@ -187,6 +196,30 @@ class SudokuViewModel(val gameStateManager: GameStateManager) : ViewModel() {
             }
         }
     } // enter a number (1-9) in a cell at the specified index if cell is empty OR add a note if toggled on
+
+    fun triggerFlash(index: Int) {
+        viewModelScope.launch{
+            repeat(2) {
+                _uiState.value = _uiState.value.copy(flashingIndex = index)
+                delay(200)
+                _uiState.value = _uiState.value.copy(flashingIndex = null)
+                delay(200)
+            }
+            val newBoard = _uiState.value.board.copy()
+            val gameOver = _uiState.value.lives <= 0
+            if(gameOver){
+                stopTimer()
+                clearSavedGame()
+            }
+            _uiState.value = _uiState.value.copy(
+                board = newBoard,
+                isGameOver = gameOver
+            )
+            if(!gameOver) {
+                saveGameState()
+            }
+        }
+    }
 
     fun clearSelectedCell() {
         val selectedIndex = _uiState.value.selectedIndex

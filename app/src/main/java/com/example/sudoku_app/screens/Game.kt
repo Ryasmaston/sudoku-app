@@ -63,6 +63,26 @@ fun GameScreen(
             }
         )
     }
+    if (state.isGameOver) {
+        AlertDialog(
+            onDismissRequest = {},
+            title = {
+                Text(text = "💀 Game Over!")
+            },
+            text = {
+                Text(
+                    text = "You ran out of lives!\nTime played: ${
+                        sudokuViewModel.formatTime(state.elapsedTime)
+                    }"
+                )
+            },
+            confirmButton = {
+                Button(onClick = { navController.popBackStack() }) {
+                    Text("Back to Homepage")
+                }
+            }
+        )
+    }
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -82,6 +102,10 @@ fun GameScreen(
                 )
                 Text(
                     text = "Clues: ${state.clueCount}",
+                    fontSize = 14.sp
+                )
+                Text(
+                    text = "Lives: ${"❤️".repeat(state.lives)}",
                     fontSize = 14.sp
                 )
             }
