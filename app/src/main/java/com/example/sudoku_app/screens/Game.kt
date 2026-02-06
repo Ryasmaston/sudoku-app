@@ -84,6 +84,10 @@ fun GameScreen(
                     text = "Clues: ${state.clueCount}",
                     fontSize = 14.sp
                 )
+                Text(
+                    text = "Lives: ${"❤️".repeat(state.lives)}",
+                    fontSize = 14.sp
+                )
             }
 
             Column(horizontalAlignment = Alignment.End) {
