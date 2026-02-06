@@ -28,7 +28,8 @@ data class GameUIState(
     val notesMode: Boolean = false,
     val hasActiveGame: Boolean = false,
     var lives: Int = 3,
-    val flashingIndex: Int?= null
+    val flashingIndex: Int?= null,
+    val isGameOver: Boolean = false
     )
 
 class SudokuViewModel(val gameStateManager: GameStateManager) : ViewModel() {
@@ -205,8 +206,18 @@ class SudokuViewModel(val gameStateManager: GameStateManager) : ViewModel() {
                 delay(200)
             }
             val newBoard = _uiState.value.board.copy()
-            _uiState.value = _uiState.value.copy(board = newBoard)
-            saveGameState()
+            val gameOver = _uiState.value.lives <= 0
+            if(gameOver){
+                stopTimer()
+                clearSavedGame()
+            }
+            _uiState.value = _uiState.value.copy(
+                board = newBoard,
+                isGameOver = gameOver
+            )
+            if(!gameOver) {
+                saveGameState()
+            }
         }
     }
 
