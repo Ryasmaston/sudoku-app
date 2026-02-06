@@ -13,24 +13,14 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.encodeToString
-import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
 
 val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "sudoku_prefs")
 
-@Serializable
-data class CellData(
-    val row: Int,
-    val col: Int,
-    val value: Int?,
-    val isFixed: Boolean,
-    val isCorrect: Boolean?,
-    val notes: List<Int>
-)
+
 @Serializable
 data class SavedGameState(
-    val boardCells: List<List<CellData>>,
+    val boardCells: List<List<SudokuCell>>,
     val solution: List<List<Int>>?,
     val difficulty: Int,
     val difficultyLabel: String,
@@ -56,20 +46,8 @@ class GameStateManager(private val context: Context) {
         elapsedTime: Int,
         notesMode: Boolean
     ) {
-        val cellData = board.cells.map { row ->
-            row.map { cell ->
-                CellData(
-                    row = cell.row,
-                    col = cell.col,
-                    value = cell.value,
-                    isFixed = cell.isFixed,
-                    isCorrect = cell.isCorrect,
-                    notes = cell.notes.toList()
-                )
-            }
-        }
         val savedState = SavedGameState(
-            boardCells = cellData,
+            boardCells = board.cells,
             solution = board.solution,
             difficulty = difficulty,
             difficultyLabel = difficultyLabel,
@@ -112,8 +90,7 @@ class GameStateManager(private val context: Context) {
                 cell.value = cellData.value
                 cell.isFixed = cellData.isFixed
                 cell.isCorrect = cellData.isCorrect
-                cell.notes.clear()
-                cell.notes.addAll(cellData.notes)
+                cell.notes = cellData.notes
             }
         }
         newBoard.solution = savedState.solution

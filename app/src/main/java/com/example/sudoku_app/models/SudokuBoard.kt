@@ -39,7 +39,7 @@ class SudokuBoard(val size: Int = 9) {
                 newBoard.cells[r][c].value = this.cells[r][c].value
                 newBoard.cells[r][c].isFixed = this.cells[r][c].isFixed
                 newBoard.cells[r][c].isCorrect = this.cells[r][c].isCorrect
-                newBoard.cells[r][c].notes = this.cells[r][c].notes.toMutableSet()
+                newBoard.cells[r][c].notes = this.cells[r][c].notes.toList()
             }
         }
         newBoard.solution = this.solution
