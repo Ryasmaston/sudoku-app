@@ -1,0 +1,122 @@
+package com.example.sudoku_app.data
+
+import android.content.Context
+import androidx.datastore.core.DataStore
+import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.core.booleanPreferencesKey
+import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.stringPreferencesKey
+import androidx.datastore.preferences.preferencesDataStore
+import com.example.sudoku_app.models.SudokuBoard
+import com.example.sudoku_app.models.SudokuCell
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.map
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.decodeFromString
+import kotlinx.serialization.json.Json
+
+val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "sudoku_prefs")
+
+@Serializable
+data class CellData(
+    val row: Int,
+    val col: Int,
+    val value: Int?,
+    val isFixed: Boolean,
+    val isCorrect: Boolean?,
+    val notes: List<Int>
+)
+@Serializable
+data class SavedGameState(
+    val boardCells: List<List<CellData>>,
+    val solution: List<List<Int>>?,
+    val difficulty: Int,
+    val difficultyLabel: String,
+    val clueCount: Int,
+    val elapsedTime: Int,
+    val notesMode: Boolean
+)
+
+class GameStateManager(private val context: Context) {
+    companion object {
+        private val HAS_SAVED_GAME = booleanPreferencesKey("has_saved_game")
+        private val SAVED_GAME_DATA = stringPreferencesKey("saved_game_data")
+    }
+    val hasSavedGame: Flow<Boolean> = context.dataStore.data.map { preferences ->
+        preferences[HAS_SAVED_GAME] ?: false
+    }
+
+    suspend fun saveGame(
+        board: SudokuBoard,
+        difficulty: Int,
+        difficultyLabel: String,
+        clueCount: Int,
+        elapsedTime: Int,
+        notesMode: Boolean
+    ) {
+        val cellData = board.cells.map { row ->
+            row.map { cell ->
+                CellData(
+                    row = cell.row,
+                    col = cell.col,
+                    value = cell.value,
+                    isFixed = cell.isFixed,
+                    isCorrect = cell.isCorrect,
+                    notes = cell.notes.toList()
+                )
+            }
+        }
+        val savedState = SavedGameState(
+            boardCells = cellData,
+            solution = board.solution,
+            difficulty = difficulty,
+            difficultyLabel = difficultyLabel,
+            clueCount = clueCount,
+            elapsedTime = elapsedTime,
+            notesMode = notesMode
+        )
+        val jsonString = Json.encodeToString(savedState)
+        context.dataStore.edit { preferences ->
+            preferences[HAS_SAVED_GAME] = true
+            preferences[SAVED_GAME_DATA] = jsonString
+        }
+    }
+
+    suspend fun loadGame(): SavedGameState? {
+        return try {
+            val preferences = context.dataStore.data.first()
+            val jsonString = preferences[SAVED_GAME_DATA] ?: return null
+            Json.decodeFromString<SavedGameState>(jsonString)
+        } catch (e: Exception) {
+            null
+        }
+    }
+
+    suspend fun clearSavedGame() {
+        context.dataStore.edit { preferences ->
+            preferences[HAS_SAVED_GAME] = false
+            preferences.remove(SAVED_GAME_DATA)
+        }
+    }
+
+    fun restoreBoardFromSavedState(savedState: SavedGameState): SudokuBoard {
+        val newBoard = SudokuBoard(size = 9)
+
+        for (row in 0 until 9) {
+            for (col in 0 until 9) {
+                val cellData = savedState.boardCells[row][col]
+                val cell = newBoard.cells[row][col]
+
+                cell.value = cellData.value
+                cell.isFixed = cellData.isFixed
+                cell.isCorrect = cellData.isCorrect
+                cell.notes.clear()
+                cell.notes.addAll(cellData.notes)
+            }
+        }
+        newBoard.solution = savedState.solution
+        return newBoard
+    }
+}
