@@ -139,7 +139,7 @@ class SudokuViewModel(val gameStateManager: GameStateManager) : ViewModel() {
                 if (!cell.isFixed) {
                     cell.value = solution[row][col]
                     cell.isCorrect = true
-                    cell.notes.clear()
+                    cell.notes = emptyList()
                 }
             }
         }
@@ -160,13 +160,13 @@ class SudokuViewModel(val gameStateManager: GameStateManager) : ViewModel() {
         if(!cell.isFixed) {
             if (_uiState.value.notesMode) {
                 if (cell.notes.contains(number)) {
-                    cell.notes.remove(number)
+                    cell.notes -= number
                 } else {
-                    cell.notes.add(number)
+                    cell.notes += number
                 }
             } else {
                 cell.value = number
-                cell.notes.clear()
+                cell.notes = emptyList()
                 val solution = _uiState.value.board.solution
                 if (solution != null) {
                     cell.isCorrect = (number == solution[row][col])
