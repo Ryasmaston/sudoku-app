@@ -57,10 +57,14 @@ fun GameScreen(
                 )
             },
             confirmButton = {
-                Button(onClick = {navController.popBackStack()}) {
+                Button(onClick = {
+                    sudokuViewModel.clearSavedGame()
+                    navController.popBackStack()
+                }) {
                     Text("Back to homepage")
                 }
-            }
+            },
+            dismissButton = {}
         )
     }
     if (state.isGameOver) {
@@ -77,10 +81,14 @@ fun GameScreen(
                 )
             },
             confirmButton = {
-                Button(onClick = { navController.popBackStack() }) {
+                Button(onClick = {
+                    sudokuViewModel.clearSavedGame()
+                    navController.popBackStack()
+                }) {
                     Text("Back to Homepage")
                 }
-            }
+            },
+            dismissButton = {}
         )
     }
     Column(
