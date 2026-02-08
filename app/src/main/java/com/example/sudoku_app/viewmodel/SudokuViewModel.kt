@@ -202,7 +202,7 @@ class SudokuViewModel(val gameStateManager: GameStateManager) : ViewModel() {
         val row = index / 9
         val col = index % 9
         val currentBoard = _uiState.value.board
-        var cell = currentBoard.cells[row][col]
+        val cell = currentBoard.cells[row][col]
         viewModelScope.launch{
             cell.isFixed = true
             repeat(2) {
@@ -239,7 +239,8 @@ class SudokuViewModel(val gameStateManager: GameStateManager) : ViewModel() {
                 cell.isCorrect = null
                 _uiState.value = _uiState.value.copy(
                     board = _uiState.value.board,
-                    isComplete = false
+                    isComplete = false,
+                    isGameOver = false
                 )
                 saveGameState()
             }
