@@ -44,7 +44,6 @@ fun Grid(modifier: Modifier = Modifier, sudokuViewModel: SudokuViewModel = viewM
             }
         }
     }
-
     Column(modifier = modifier.background(Color.White)) {
         Box(
             Modifier
@@ -136,6 +135,7 @@ fun Grid(modifier: Modifier = Modifier, sudokuViewModel: SudokuViewModel = viewM
 
                     )
                 }
+                // draw horizontal lines
                 for (i in 0..9) {
                     val y = i * cellSize
                     val strokeWidth = if (i % 3 == 0) 4.dp.toPx() else 1.dp.toPx()
