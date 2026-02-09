@@ -69,8 +69,29 @@ fun Grid(modifier: Modifier = Modifier, sudokuViewModel: SudokuViewModel = viewM
                             val isFlashing = index == flashingIndex
                             val isInCompletion = completionHighlight?.indices?.contains(index) == true
                             val completionAlpha = if (isInCompletion) {
-                                val pulse = kotlin.math.sin(completionHighlight.progress * Math.PI).toFloat()
-                                0.3f + (pulse * 0.4f)
+                                val sourceRow = completionHighlight.sourceIndex / 9
+                                val sourceCol = completionHighlight.sourceIndex % 9
+                                val cellRow = index / 9
+                                val cellCol = index % 9
+                                val distance = kotlin.math.abs(cellRow - sourceRow) + kotlin.math.abs(cellCol - sourceCol)
+                                val maxDistance = completionHighlight.indices.maxOf { cellIndex ->
+                                    val r = cellIndex / 9
+                                    val c = cellIndex % 9
+                                    kotlin.math.abs(r - sourceRow) + kotlin.math.abs(c - sourceCol)
+                                }.toFloat()
+                                val normalizedDistance = if (maxDistance > 0) distance.toFloat() / maxDistance else 0f
+                                val rippleStart = normalizedDistance
+                                val rippleEnd = normalizedDistance + 0.3f
+
+                                when {
+                                    completionHighlight.progress < rippleStart -> 0f
+                                    completionHighlight.progress > rippleEnd -> 0.2f
+                                    else -> {
+                                        val localProgress = (completionHighlight.progress - rippleStart) / 0.3f
+                                        val wave = kotlin.math.sin(localProgress * Math.PI).toFloat()
+                                        0.4f + (wave * 0.5f)
+                                    }
+                                }
                             } else 0f
 
                             Box(
