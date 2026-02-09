@@ -30,8 +30,15 @@ data class GameUIState(
     var lives: Int = 3,
     val flashingIndex: Int?= null,
     val isGameOver: Boolean = false,
-    val showCompletionDialog: Boolean = false
+    val showCompletionDialog: Boolean = false,
+    val completionHighlight: CompletionHighlight? = null
     )
+
+data class CompletionHighlight(
+    val indices: List<Int>,
+    val progress: Float = 0f,
+    val sourceIndex: Int
+)
 
 class SudokuViewModel(val gameStateManager: GameStateManager) : ViewModel() {
 
@@ -182,7 +189,7 @@ class SudokuViewModel(val gameStateManager: GameStateManager) : ViewModel() {
                 }
                 if (cell.isCorrect == false) {
                     _uiState.value = _uiState.value.copy(lives = _uiState.value.lives - 1)
-                    triggerErrorFlash(index)
+                    triggerFlash(index)
                     return
                 }
             }
@@ -197,6 +204,9 @@ class SudokuViewModel(val gameStateManager: GameStateManager) : ViewModel() {
                 isComplete = isComplete,
                 showCompletionDialog = isComplete
             )
+            if(!_uiState.value.notesMode && cell.isCorrect == true){
+                triggerCompletionRipple(index, newBoard)
+            }
             if (!isComplete){
                 saveGameState()
             }
@@ -237,20 +247,103 @@ class SudokuViewModel(val gameStateManager: GameStateManager) : ViewModel() {
         }
     }
 
-    fun triggerCorrectFlash(index: Int){
+//    fun triggerCorrectFlash(index: Int){
+//        val row = index / 9
+//        val col = index % 9
+//        val currentBoard = _uiState.value.board
+//        val cell = currentBoard.cells[row][col]
+//        viewModelScope.launch{
+//            cell.isFixed = true
+//            repeat(2) {
+//                _uiState.value = _uiState.value.copy(flashingIndex = index)
+//                delay(200)
+//                _uiState.value = _uiState.value.copy(flashingIndex = null)
+//                delay(200)
+//            }
+//            cell.isFixed = false
+//        }
+//    }
+
+    fun isRowComplete(row: Int, board: SudokuBoard): Boolean {
+        val solution = board.solution ?: return false
+        for(col in 0 until 9) {
+            val cell = board.cells[row][col]
+            if(cell.value == null || cell.value != solution[row][col]) {
+                return false
+            }
+        }
+        return true
+    }
+
+    fun isColumnComplete(col: Int, board: SudokuBoard): Boolean {
+        val solution = board.solution ?: return false
+        for(row in 0 until 9) {
+            val cell = board.cells[row][col]
+            if(cell.value == null || cell.value != solution[row][col]) {
+                return false
+            }
+        }
+        return true
+    }
+
+    fun isSquareComplete(squareRow: Int, squareCol: Int, board: SudokuBoard): Boolean {
+        val solution = board.solution?: return false
+        val startRow = squareRow * 3
+        val startCol = squareCol * 3
+        for(row in startRow until startRow + 3) {
+            for(col in startCol until startCol + 3) {
+                val cell = board.cells[row][col]
+                if(cell.value == null || cell.value != solution[row][col]) {
+                    return false
+                }
+            }
+        }
+        return true
+    }
+
+    fun getSquareIndices(squareRow: Int, squareCol: Int): List<Int> {
+        val startRow = squareRow * 3
+        val startCol = squareCol * 3
+        return buildList {
+            for(row in startRow until startRow + 3) {
+                for(col in startCol until startCol + 3) {
+                    add(row * 9 + col)
+                }
+            }
+        }
+    }
+
+    fun triggerCompletionRipple(index: Int, board: SudokuBoard) {
         val row = index / 9
         val col = index % 9
-        val currentBoard = _uiState.value.board
-        val cell = currentBoard.cells[row][col]
-        viewModelScope.launch{
-            cell.isFixed = true
-            repeat(2) {
-                _uiState.value = _uiState.value.copy(flashingIndex = index)
-                delay(200)
-                _uiState.value = _uiState.value.copy(flashingIndex = null)
-                delay(200)
+        val squareRow = row / 3
+        val squareCol = col / 3
+        val completedIndices = mutableListOf<Int>()
+        if(isRowComplete(row, board)) {
+            completedIndices.addAll((0 until 9).map{row * 9 + it})
+        }
+        if (isColumnComplete(col, board)) {
+            completedIndices.addAll((0 until 9).map {it * 9 + col})
+        }
+        if(isSquareComplete(squareRow, squareCol, board)) {
+            completedIndices.addAll(getSquareIndices(squareRow, squareCol))
+        }
+        if(completedIndices.isNotEmpty()) {
+            viewModelScope.launch {
+                val steps = 30
+                for(step in 0..steps){
+                    val progress = step.toFloat() / steps
+                    _uiState.value = _uiState.value.copy(
+                        completionHighlight = CompletionHighlight(
+                            indices = completedIndices.distinct(),
+                            progress = progress,
+                            sourceIndex = index
+                        )
+                    )
+                    delay(25)
+                }
+                _uiState.value = _uiState.value.copy(completionHighlight = null)
             }
-            cell.isFixed = false
         }
     }
 

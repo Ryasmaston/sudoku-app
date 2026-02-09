@@ -20,6 +20,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -37,6 +38,7 @@ fun Grid(modifier: Modifier = Modifier, sudokuViewModel: SudokuViewModel = viewM
     val rowIndices = state.rowIndexList
     val squareIndices = state.squareIndexList
     val flashingIndex = state.flashingIndex
+    val completionHighlight = state.completionHighlight
     val flattenedBoard = buildList {
         for (row in 0 until 9) {
             for (col in 0 until 9) {
@@ -66,6 +68,36 @@ fun Grid(modifier: Modifier = Modifier, sudokuViewModel: SudokuViewModel = viewM
                             val isInRow = index in rowIndices
                             val isInSquare = index in squareIndices
                             val isFlashing = index == flashingIndex
+                            val isInCompletion = completionHighlight?.indices?.contains(index) == true
+                            val completionAlpha = if (isInCompletion && completionHighlight != null) {
+                                val sourceRow = completionHighlight.sourceIndex / 9
+                                val sourceCol = completionHighlight.sourceIndex % 9
+                                val cellRow = index / 9
+                                val cellCol = index % 9
+                                val distance = kotlin.math.abs(cellRow - sourceRow) + kotlin.math.abs(cellCol - sourceCol)
+                                val maxDistance = completionHighlight.indices.maxOf { cellIndex ->
+                                    val r = cellIndex / 9
+                                    val c = cellIndex % 9
+                                    kotlin.math.abs(r - sourceRow) + kotlin.math.abs(c - sourceCol)
+                                }.toFloat()
+                                val normalizedDistance = if (maxDistance > 0) distance.toFloat() / maxDistance else 0f
+                                val rippleStart = normalizedDistance * 0.7f
+                                val rippleWidth = 0.25f
+                                val rippleEnd = rippleStart + rippleWidth
+                                when {
+                                    completionHighlight.progress < rippleStart -> 0f
+                                    completionHighlight.progress > rippleEnd -> {
+                                        val fadeProgress = (completionHighlight.progress - rippleEnd) / (1.0f - rippleEnd)
+                                        val fadeAlpha = 0.3f * (1f - fadeProgress)
+                                        fadeAlpha.coerceAtLeast(0f)
+                                    }
+                                    else -> {
+                                        val localProgress = (completionHighlight.progress - rippleStart) / rippleWidth
+                                        val wave = kotlin.math.sin(localProgress * Math.PI).toFloat()
+                                        0.4f + (wave * 0.5f)
+                                    }
+                                }
+                            } else 0f
 
                             Box(
                                 modifier = Modifier
@@ -74,6 +106,7 @@ fun Grid(modifier: Modifier = Modifier, sudokuViewModel: SudokuViewModel = viewM
                                     .background(
                                         when {
                                             isFlashing -> Color(0xFFF44336)
+                                            isInCompletion -> Color(0xFF4CAF50).copy(alpha = completionAlpha)
                                             isSelectedCell -> Color.Black
                                             isInColumn -> Color.LightGray
                                             isInRow -> Color.LightGray
@@ -90,6 +123,7 @@ fun Grid(modifier: Modifier = Modifier, sudokuViewModel: SudokuViewModel = viewM
                                     Text(
                                         text = cell.value.toString(),
                                         color = when {
+                                            isInCompletion && !cell.isFixed -> Color(0xFF4CAF50)
                                             isSelectedCell -> Color.White
                                             cell.isFixed -> Color.Black
                                             cell.isCorrect == true -> Color(0xFF4CAF50)
