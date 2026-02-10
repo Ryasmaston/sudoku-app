@@ -206,8 +206,9 @@ class SudokuViewModel(val gameStateManager: GameStateManager) : ViewModel() {
             _uiState.value = _uiState.value.copy(
                 board = newBoard,
                 isComplete = isComplete,
-                showCompletionDialog = isComplete
+                showCompletionDialog = isComplete,
             )
+            generateMatchingNumbers(index)
             if(!_uiState.value.notesMode && cell.isCorrect == true){
                 triggerCompletionRipple(index, newBoard)
             }
