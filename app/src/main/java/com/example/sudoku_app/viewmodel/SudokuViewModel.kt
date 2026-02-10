@@ -415,12 +415,16 @@ class SudokuViewModel(val gameStateManager: GameStateManager) : ViewModel() {
             if(!cell.isFixed) {
                 cell.value = null
                 cell.isCorrect = null
+                cell.notes = emptyList()
                 _uiState.value = _uiState.value.copy(
-                    board = _uiState.value.board,
+                    board = _uiState.value.board.copy(),
                     isComplete = false,
-                    isGameOver = false
+                    isGameOver = false,
+                    matchingNumberIndices = emptyList()
                 )
-                saveGameState()
+                viewModelScope.launch {
+                    saveGameState()
+                }
             }
         }
     } // clear value from currently selected cell
