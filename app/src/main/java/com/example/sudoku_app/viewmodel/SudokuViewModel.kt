@@ -230,7 +230,7 @@ class SudokuViewModel(val gameStateManager: GameStateManager) : ViewModel() {
         val matches = mutableListOf<Int>()
         for(r in 0 until 9) {
             for(c in 0 until 9) {
-                if(_uiState.value.board.cells[row][col].value == selectedValue) {
+                if(_uiState.value.board.cells[r][c].value == selectedValue) {
                     matches.add(r * 9 + c)
                 }
             }
