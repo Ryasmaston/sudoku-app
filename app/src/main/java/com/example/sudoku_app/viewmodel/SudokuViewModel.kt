@@ -31,7 +31,8 @@ data class GameUIState(
     val flashingIndex: Int?= null,
     val isGameOver: Boolean = false,
     val showCompletionDialog: Boolean = false,
-    val completionHighlight: CompletionHighlight? = null
+    val completionHighlight: CompletionHighlight? = null,
+    val matchingNumberIndices: List<Int> = emptyList()
     )
 
 data class CompletionHighlight(
@@ -195,6 +196,9 @@ class SudokuViewModel(val gameStateManager: GameStateManager) : ViewModel() {
                     triggerErrorFlash(index)
                     return
                 }
+                if(cell.isCorrect == true){
+                    clearNotesForNumber(index, number, currentBoard)
+                }
             }
             val newBoard = currentBoard.copy()
             val isComplete = checkIfComplete(newBoard)
@@ -205,8 +209,9 @@ class SudokuViewModel(val gameStateManager: GameStateManager) : ViewModel() {
             _uiState.value = _uiState.value.copy(
                 board = newBoard,
                 isComplete = isComplete,
-                showCompletionDialog = isComplete
+                showCompletionDialog = isComplete,
             )
+            generateMatchingNumbers(index)
             if(!_uiState.value.notesMode && cell.isCorrect == true){
                 triggerCompletionRipple(index, newBoard)
             }
@@ -215,6 +220,50 @@ class SudokuViewModel(val gameStateManager: GameStateManager) : ViewModel() {
             }
         }
     } // enter a number (1-9) in a cell at the specified index if cell is empty OR add a note if toggled on
+
+    fun generateMatchingNumbers(index: Int) {
+        val row = index / 9
+        val col = index % 9
+        val selectedValue = _uiState.value.board.cells[row][col].value
+        if(selectedValue == null) {
+            _uiState.value = _uiState.value.copy(
+                matchingNumberIndices = emptyList()
+            )
+            return
+        }
+        val matches = mutableListOf<Int>()
+        for(r in 0 until 9) {
+            for(c in 0 until 9) {
+                if(_uiState.value.board.cells[r][c].value == selectedValue) {
+                    matches.add(r * 9 + c)
+                }
+            }
+        }
+        _uiState.value = _uiState.value.copy(
+            matchingNumberIndices = matches
+        )
+    }
+
+    fun clearNotesForNumber(index: Int, number: Int, board: SudokuBoard) {
+        val row = index / 9
+        val col = index % 9
+        val squareRow = row / 3
+        val squareCol = col / 3
+        for(r in 0 until 9){
+            for(c in 0 until 9) {
+                val cell = board.cells[r][c]
+                if(cell.isFixed || cell.value != null) continue
+                val sameRow = r == row
+                val sameCol = c == col
+                val sameSquare = (r / 3 == squareRow && c / 3 == squareCol)
+                if(sameRow || sameCol || sameSquare) {
+                    if(cell.notes.contains(number)){
+                        cell.notes = cell.notes - number
+                    }
+                }
+            }
+        }
+    }
 
     fun dismissCompletionDialog(){
         _uiState.value = _uiState.value.copy(showCompletionDialog = false)
@@ -472,20 +521,22 @@ class SudokuViewModel(val gameStateManager: GameStateManager) : ViewModel() {
             generateColumn(index)
             generateRow(index)
             generateSquare(index)
+            generateMatchingNumbers(index)
         } else if (_uiState.value.selectedIndex != index) {
-
             _uiState.value = _uiState.value.copy(
                 selectedIndex = index
             )
             generateColumn(index)
             generateRow(index)
             generateSquare(index)
+            generateMatchingNumbers(index)
         } else {
             _uiState.value = _uiState.value.copy(
                 selectedIndex = null,
                 columnIndexList = emptyList(),
                 rowIndexList = emptyList(),
-                squareIndexList = emptyList()
+                squareIndexList = emptyList(),
+                matchingNumberIndices = emptyList()
 
             )
         }
