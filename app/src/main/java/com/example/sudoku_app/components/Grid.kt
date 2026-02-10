@@ -39,6 +39,7 @@ fun Grid(modifier: Modifier = Modifier, sudokuViewModel: SudokuViewModel = viewM
     val squareIndices = state.squareIndexList
     val flashingIndex = state.flashingIndex
     val completionHighlight = state.completionHighlight
+    val matchingIndices = state.matchingNumberIndices
     val flattenedBoard = buildList {
         for (row in 0 until 9) {
             for (col in 0 until 9) {
@@ -68,6 +69,7 @@ fun Grid(modifier: Modifier = Modifier, sudokuViewModel: SudokuViewModel = viewM
                             val isInRow = index in rowIndices
                             val isInSquare = index in squareIndices
                             val isFlashing = index == flashingIndex
+                            val isMatchingNumber = index in matchingIndices
                             val isInCompletion = completionHighlight?.indices?.contains(index) == true
                             val completionAlpha = if (isInCompletion && completionHighlight != null) {
                                 val sourceRow = completionHighlight.sourceIndex / 9
@@ -108,6 +110,7 @@ fun Grid(modifier: Modifier = Modifier, sudokuViewModel: SudokuViewModel = viewM
                                             isFlashing -> Color(0xFFF44336)
                                             isInCompletion -> Color(0xFF4CAF50).copy(alpha = completionAlpha)
                                             isSelectedCell -> Color.Black
+                                            isMatchingNumber -> Color(0xFFBBDEFB)
                                             isInColumn -> Color.LightGray
                                             isInRow -> Color.LightGray
                                             isInSquare -> Color.LightGray

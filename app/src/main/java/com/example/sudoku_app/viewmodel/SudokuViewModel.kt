@@ -496,20 +496,22 @@ class SudokuViewModel(val gameStateManager: GameStateManager) : ViewModel() {
             generateColumn(index)
             generateRow(index)
             generateSquare(index)
+            generateMatchingNumbers(index)
         } else if (_uiState.value.selectedIndex != index) {
-
             _uiState.value = _uiState.value.copy(
                 selectedIndex = index
             )
             generateColumn(index)
             generateRow(index)
             generateSquare(index)
+            generateMatchingNumbers(index)
         } else {
             _uiState.value = _uiState.value.copy(
                 selectedIndex = null,
                 columnIndexList = emptyList(),
                 rowIndexList = emptyList(),
-                squareIndexList = emptyList()
+                squareIndexList = emptyList(),
+                matchingNumberIndices = emptyList()
 
             )
         }
